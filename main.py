@@ -42,17 +42,17 @@ if user_input:
 
 
 	def convert_df(df):
-	        return df.to_csv().encode('utf-8')
+			return df.to_csv().encode('utf-8')
 
 	csv = convert_df(df)
 
 	st.download_button(
-	           "Download all Courses / Clusters in Curation",
-	           csv,
-	           "results.csv",
-	           "text/csv",
-	           key='download-csv'
-	            )
+			   "Download all Courses / Clusters in Curation",
+			   csv,
+			   "results.csv",
+			   "text/csv",
+			   key='download-csv'
+				)
 
 	st.subheader('Generated Clusters')
 
@@ -81,13 +81,13 @@ if user_input:
 
 					st.write('''
 								<head>
-							    <a target="_blank" href="{}">
-							        <button style="color:D23227;background-color:#FFFFFF";border-color:#D23227>
-							            See the course
-							        </button>
-							    </a>
-							    '''.format(row['url']),
-							    unsafe_allow_html=True)
+								<a target="_blank" href="{}">
+									<button style="color:D23227;background-color:#FFFFFF";border-color:#D23227>
+										See the course
+									</button>
+								</a>
+								'''.format(row['url']),
+								unsafe_allow_html=True)
 				st.markdown('')
 				st.markdown('')
 				st.markdown('')
@@ -100,9 +100,9 @@ if user_input:
 	st.dataframe(data=df)
 
 	st.download_button(
-	           "Download all Courses / Clusters in Curation",
-	           csv,
-	           "results.csv",
-	           "text/csv",
-	           key='download-csv2'
-	            )
+			   "Download all Courses / Clusters in Curation",
+			   csv,
+			   "results.csv",
+			   "text/csv",
+			   key='download-csv2'
+				)

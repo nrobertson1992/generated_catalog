@@ -89,12 +89,12 @@ def generate_recommendations(user_input, filtered_jobs_df, job_skills, course_sk
 		Output:
 		* First draft of 
 		"""
-	    
-	    job_ids = filtered_jobs_df[filtered_jobs_df['job_name'].isin(relevant_jobs)]['job_id']
-	    skill_ids = job_skills[job_skills['job_id'].isin(job_ids)]['skill_id']
-	    filtered_courses = course_skills[course_skills['skill_id'].isin(skill_ids)]['course_key']
-	    
-	    return course_metadata[course_metadata['course_key'].isin(filtered_courses)]
+		
+		job_ids = filtered_jobs_df[filtered_jobs_df['job_name'].isin(relevant_jobs)]['job_id']
+		skill_ids = job_skills[job_skills['job_id'].isin(job_ids)]['skill_id']
+		filtered_courses = course_skills[course_skills['skill_id'].isin(skill_ids)]['course_key']
+		
+		return course_metadata[course_metadata['course_key'].isin(filtered_courses)]
 
 	my_bar.progress(20, text='📝 Translate Lightcast jobs into a course list')
 	relevant_courses = get_relevant_courses(relevant_jobs)
@@ -102,20 +102,20 @@ def generate_recommendations(user_input, filtered_jobs_df, job_skills, course_sk
 	# Rank the courses to prune some of the candidates and save ChatGPT costs.
 	@st.cache_data
 	def intersection_ranker(relevant_jobs, relevant_courses):
-	    
-	    results = []
-	    
-	    job_id = filtered_jobs_df[filtered_jobs_df['job_name'].isin(relevant_jobs)]['job_id']
-	    skill_id = job_skills[job_skills['job_id'].isin(job_id)]['skill_id']
-	    job_skills_set = set(course_skills[course_skills['skill_id'].isin(skill_id)]['skill_name'].unique())
-	        
-	    for i, row in relevant_courses.iterrows():
-	        course_skills_set = set(row['skills'].split(', '))
-	        
-	        intersection = course_skills_set.intersection(job_skills_set)
-	        results.append(len(intersection) / len(job_skills_set))
-	        
-	    return results
+		
+		results = []
+		
+		job_id = filtered_jobs_df[filtered_jobs_df['job_name'].isin(relevant_jobs)]['job_id']
+		skill_id = job_skills[job_skills['job_id'].isin(job_id)]['skill_id']
+		job_skills_set = set(course_skills[course_skills['skill_id'].isin(skill_id)]['skill_name'].unique())
+			
+		for i, row in relevant_courses.iterrows():
+			course_skills_set = set(row['skills'].split(', '))
+			
+			intersection = course_skills_set.intersection(job_skills_set)
+			results.append(len(intersection) / len(job_skills_set))
+			
+		return results
 
 	my_bar.progress(25, text='🔍 First phase course pruning: pick 200 curation candidates based on skill tags (intersection ratio).')
 
@@ -136,10 +136,10 @@ def generate_recommendations(user_input, filtered_jobs_df, job_skills, course_sk
 	my_bar.progress(35, text='🔍 Second phase course pruning by ChatGPT: select courses that look like they are related to the selected Lightcast jobs.')
 	with Pool(8) as pool: # will Pool work when it is put on a server?
 
-	    for result in tqdm(pool.imap(gpt.chatgpt, relevant_courses['prompt_column'])):
-	        results.append(result[0])
-	        tokens += result[1]   
-	    
+		for result in tqdm(pool.imap(gpt.chatgpt, relevant_courses['prompt_column'])):
+			results.append(result[0])
+			tokens += result[1]   
+		
 	pool.close()
 
 	# Append results, filter.
@@ -162,22 +162,22 @@ def generate_recommendations(user_input, filtered_jobs_df, job_skills, course_sk
 
 	my_bar.progress(75, text='🤖 For each course, ask ChatGPT to decide which clusters it belongs in.')
 	for cluster in all_clusters:
-	    
-	    relevant_courses['prompt_column'] = relevant_courses['course_title'].apply(
-	        lambda x: gpt.cluster_check(course=x, cluster=cluster))
-	    
-	    results = []
-	    tokens = 0
+		
+		relevant_courses['prompt_column'] = relevant_courses['course_title'].apply(
+			lambda x: gpt.cluster_check(course=x, cluster=cluster))
+		
+		results = []
+		tokens = 0
 
-	    with Pool(8) as pool:
+		with Pool(8) as pool:
 
-	        for result in tqdm(pool.imap(gpt.chatgpt, relevant_courses['prompt_column'])):
-	            results.append(result[0])
-	            tokens += result[1]   
+			for result in tqdm(pool.imap(gpt.chatgpt, relevant_courses['prompt_column'])):
+				results.append(result[0])
+				tokens += result[1]   
 
-	    pool.close()
-	    
-	    relevant_courses[cluster] = results
+		pool.close()
+		
+		relevant_courses[cluster] = results
 
 	my_bar.progress(95, text="🧹 Cleaning Data.")
 	relevant_courses = relevant_courses.drop(columns=['intersection_ranker', 'prompt_base', 'relevant', 'prompt_column'])
